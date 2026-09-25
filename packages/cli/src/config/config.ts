@@ -91,6 +91,9 @@ function parseApprovalModeValue(value: string): ApprovalMode {
 }
 
 export interface CliArgs {
+  engine: 'auto' | 'codex' | 'agy' | 'legacy';
+  gameTools: boolean;
+  assetBackend: 'auto' | 'native' | 'procedural' | 'provider';
   query: string | undefined;
   model: string | undefined;
   sandbox: boolean | string | undefined;
@@ -255,6 +258,26 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
           alias: 'm',
           type: 'string',
           description: `Model`,
+        })
+        .option('engine', {
+          type: 'string',
+          choices: ['auto', 'codex', 'agy', 'legacy'],
+          default: 'auto',
+          description:
+            'Agent engine. auto prefers Codex, then Antigravity (agy), then the built-in legacy runtime.',
+        })
+        .option('game-tools', {
+          type: 'boolean',
+          default: true,
+          description:
+            'Expose OpenGame local game-building tools to external agent engines over MCP.',
+        })
+        .option('asset-backend', {
+          type: 'string',
+          choices: ['auto', 'native', 'procedural', 'provider'],
+          default: 'auto',
+          description:
+            'Asset generation backend. auto uses Antigravity native image generation or procedural assets with Codex; provider enables configured OpenGame APIs.',
         })
         .option('prompt', {
           alias: 'p',

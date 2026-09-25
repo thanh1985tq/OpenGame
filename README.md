@@ -190,6 +190,54 @@ mkdir -p games/my-game && cd games/my-game
 opengame -p "Build a Snake clone with WASD controls and a dark theme." --yolo
 ```
 
+OpenGame now selects the strongest installed agent CLI automatically: Codex
+first, then Antigravity (`agy`), with the built-in runtime as a fallback. You
+can pin an engine explicitly:
+
+```bash
+opengame --engine codex -p "Build a polished tower-defense game."
+opengame --engine agy -p "Build a polished tower-defense game."
+opengame --engine legacy -p "Build a polished tower-defense game."
+```
+
+Codex uses your existing Codex CLI login and runs with `workspace-write`
+sandboxing. Antigravity uses its existing CLI session in `accept-edits` mode.
+Neither external engine needs OpenGame's main-agent API key. External engines
+currently support one-shot/headless runs. By default the agent classifies the
+game and writes `GAME_DESIGN.md` itself, while OpenGame exposes the local
+`generate_tilemap` tool over MCP for map-based games.
+
+Asset generation does not require an Alibaba API key. The default `auto`
+strategy uses Antigravity's built-in image generation with `agy`, and asks
+Codex to create cohesive SVG, Canvas, CSS, or procedural pixel-art assets:
+
+```bash
+opengame --engine agy --asset-backend auto -p "Build a platformer."
+opengame --engine codex --asset-backend procedural -p "Build a platformer."
+```
+
+Available asset backends are:
+
+- `auto` — native image generation for `agy`, procedural assets for Codex.
+- `native` — prefer the selected agent's built-in image generation and fall
+  back to procedural assets if it is unavailable.
+- `procedural` — never call an external image API.
+- `provider` — enable OpenGame's configured classification, GDD, image/audio,
+  and tilemap provider tools.
+
+Codex receives an ephemeral per-run MCP configuration. For Antigravity,
+OpenGame temporarily merges the server into `.agents/mcp_config.json` and
+restores the original file when the run finishes. Use `--no-game-tools` to run
+an external engine without the local MCP tools.
+
+Alibaba, OpenAI-compatible, and other configured APIs are now optional. They
+are used only with `--asset-backend provider`; if a provider fails, the agent
+continues with procedural assets instead of stopping.
+
+If your Codex CLI's configured default model requires a newer client, update
+Codex or temporarily select a compatible model, for example
+`opengame --engine codex --model gpt-5.5 -p "..."`.
+
 When the agent finishes, open the generated `index.html` (or run the printed
 dev-server command) in your browser to play your game.
 

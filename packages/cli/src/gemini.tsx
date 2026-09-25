@@ -54,6 +54,10 @@ import { getCliVersion } from './utils/version.js';
 import { computeWindowTitle } from './utils/windowTitle.js';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
 import { showResumeSessionPicker } from './ui/components/StandaloneSessionPicker.js';
+import {
+  resolveAgentEngine,
+  runExternalAgent,
+} from './agentRunners/externalAgentRunner.js';
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -213,6 +217,58 @@ export async function main() {
       'Error: The --prompt-interactive flag cannot be used when input is piped from stdin.',
     );
     process.exit(1);
+  }
+
+  const keepLegacyInteractiveMode =
+    argv.engine === 'auto' &&
+    (Boolean(argv.promptInteractive) ||
+      (!argv.prompt && Boolean(process.stdin.isTTY)));
+  const selectedEngine = keepLegacyInteractiveMode
+    ? 'legacy'
+    : resolveAgentEngine(argv.engine);
+  if (selectedEngine === 'codex' || selectedEngine === 'agy') {
+    if (argv.promptInteractive) {
+      console.error(
+        `Error: --prompt-interactive is not supported with --engine ${selectedEngine} yet. Use a one-shot prompt with -p.`,
+      );
+      process.exit(1);
+    }
+    if (argv.inputFormat === 'stream-json') {
+      console.error(
+        `Error: --input-format stream-json is not supported with --engine ${selectedEngine} yet.`,
+      );
+      process.exit(1);
+    }
+
+    let input = argv.prompt ?? '';
+    if (!process.stdin.isTTY) {
+      const stdinData = await readStdin();
+      if (stdinData) {
+        input = input ? `${stdinData}\n\n${input}` : stdinData;
+      }
+    }
+    if (!input.trim()) {
+      console.error(
+        `No input provided. Use -p/--prompt with --engine ${selectedEngine}, or pipe a prompt through stdin.`,
+      );
+      process.exit(1);
+    }
+
+    const exitCode = await runExternalAgent({
+      engine: selectedEngine,
+      prompt: input,
+      cwd: process.cwd(),
+      model: argv.model,
+      outputFormat: argv.outputFormat,
+      approvalMode: argv.approvalMode,
+      yolo: argv.yolo,
+      continueSession: argv.continue,
+      resumeSession: argv.resume,
+      gameTools: argv.gameTools,
+      assetBackend: argv.assetBackend,
+    });
+    await runExitCleanup();
+    process.exit(exitCode);
   }
 
   const isDebugMode = cliConfig.isDebugMode(argv);

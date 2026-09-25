@@ -122,6 +122,10 @@ export * from './tools/task.js';
 export * from './tools/skill.js';
 export * from './tools/todoWrite.js';
 export * from './tools/exitPlanMode.js';
+export { GameTypeClassifierTool } from './tools/game-type-classifier.js';
+export { GenerateGDDTool } from './tools/generate-gdd.js';
+export { GenerateAssetsTool } from './tools/generate-assets.js';
+export { GenerateTilemapTool } from './tools/generate-tilemap.js';
 
 // MCP OAuth
 export { MCPOAuthProvider } from './mcp/oauth-provider.js';

@@ -436,6 +436,9 @@ describe('gemini.tsx main function kitty protocol', () => {
       forScope: () => ({ settings: {}, originalSettings: {}, path: '' }),
     } as never);
     vi.mocked(parseArguments).mockResolvedValue({
+      engine: 'auto',
+      gameTools: true,
+      assetBackend: 'auto',
       model: undefined,
       sandbox: undefined,
       sandboxImage: undefined,

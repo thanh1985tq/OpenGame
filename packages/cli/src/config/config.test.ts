@@ -116,6 +116,41 @@ describe('parseArguments', () => {
     process.argv = originalArgv;
   });
 
+  it('defaults to automatic agent engine selection', async () => {
+    process.argv = ['node', 'script.js'];
+    const argv = await parseArguments({} as Settings);
+    expect(argv.engine).toBe('auto');
+    expect(argv.gameTools).toBe(true);
+    expect(argv.assetBackend).toBe('auto');
+  });
+
+  it('allows the external MCP game tools to be disabled', async () => {
+    process.argv = ['node', 'script.js', '--no-game-tools'];
+    const argv = await parseArguments({} as Settings);
+    expect(argv.gameTools).toBe(false);
+  });
+
+  it('accepts Codex, Antigravity, and legacy agent engines', async () => {
+    for (const engine of ['codex', 'agy', 'legacy'] as const) {
+      process.argv = ['node', 'script.js', '--engine', engine];
+      const argv = await parseArguments({} as Settings);
+      expect(argv.engine).toBe(engine);
+    }
+  });
+
+  it('accepts each asset backend', async () => {
+    for (const backend of [
+      'auto',
+      'native',
+      'procedural',
+      'provider',
+    ] as const) {
+      process.argv = ['node', 'script.js', '--asset-backend', backend];
+      const argv = await parseArguments({} as Settings);
+      expect(argv.assetBackend).toBe(backend);
+    }
+  });
+
   it('should throw an error when both --prompt and --prompt-interactive are used together', async () => {
     process.argv = [
       'node',
